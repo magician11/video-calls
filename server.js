@@ -1,29 +1,22 @@
-const express = require('express')
-const app = express()
-const server = require('http').Server(app)
-const io = require('socket.io')(server)
-const { v4: uuidV4 } = require('uuid')
+const express = require('express');
+const socket = require('socket.io');
+const http = require('http');
 
-app.set('view engine', 'ejs')
-app.use(express.static('public'))
-
-app.get('/', (req, res) => {
-  res.redirect(`/${uuidV4()}`)
-})
-
-app.get('/:room', (req, res) => {
-  res.render('room', { roomId: req.params.room })
-})
+const app = express();
+const server = http.createServer(app);
+const io = socket(server);
 
 io.on('connection', socket => {
+  console.log('connection!!');
   socket.on('join-room', (roomId, userId) => {
-    socket.join(roomId)
-    socket.to(roomId).broadcast.emit('user-connected', userId)
+    console.log(`Joined room: ${roomId}, ${userId}`);
+    socket.join(roomId);
+    socket.to(roomId).broadcast.emit('user-connected', userId);
 
     socket.on('disconnect', () => {
-      socket.to(roomId).broadcast.emit('user-disconnected', userId)
-    })
-  })
-})
+      socket.to(roomId).broadcast.emit('user-disconnected', userId);
+    });
+  });
+});
 
-server.listen(3000)
+server.listen(8000);
